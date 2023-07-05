@@ -16,11 +16,7 @@ def sigmoid(x):
     Return:
     s -- sigmoid(x)
     """
-
-    ### YOUR CODE HERE (~1 Line)
-
-    ### END YOUR CODE
-
+    s = 1 / (1 + np.exp(-x))
     return s
 
 
@@ -58,7 +54,19 @@ def naiveSoftmaxLossAndGradient(
                     in shape (num words in vocab, word vector length) 
                     (dJ / dU)
     """
-
+    # Emb * [emb, V] = shape V
+    P_o_raw = centerWordVec.dot(outsideVectors.T)
+    # V
+    P_o = softmax(P_o_raw)
+    # []
+    P_specific = P_o[outsideWordIdx]
+    loss = - np.log(P_specific)
+    u_o = outsideVectors[outsideWordIdx]
+    # P_o V , V, emb => emb
+    gradCenterVec = u_o - (P_o.dot(outsideVectors))
+    # V * 
+    gradOutsideVecs = - (P_o[:,None] * centerWordVec[None, :])
+    gradOutsideVecs[outsideWordIdx] = gradOutsideVecs[outsideWordIdx] + centerWordVec
     ### YOUR CODE HERE (~6-8 Lines)
 
     ### Please use the provided softmax function (imported earlier in this file)
@@ -67,7 +75,7 @@ def naiveSoftmaxLossAndGradient(
 
     ### END YOUR CODE
 
-    return loss, gradCenterVec, gradOutsideVecs
+    return loss, -gradCenterVec, -gradOutsideVecs
 
 
 def getNegativeSamples(outsideWordIdx, dataset, K):
