@@ -115,6 +115,20 @@ def negSamplingLossAndGradient(
     # wish to match the autograder and receive points!
     negSampleWordIndices = getNegativeSamples(outsideWordIdx, dataset, K)
     indices = [outsideWordIdx] + negSampleWordIndices
+    negdot = centerWordVec.dot(outsideVectors[negSampleWordIndices].T)
+    loss = -np.log(sigmoid(centerWordVec.dot(outsideVectors[outsideWordIdx]))) + np.log(sigmoid(negdot)).sum()
+    # d(log(sigmoid(xc))) = sigmoid(xc) * dx/dc
+    gradCenterVec = (
+        (sigmoid(centerWordVec.dot(outsideVectors[outsideWordIdx])) - 1) * outsideVectors[outsideWordIdx] + 
+        (sigmoid(negdot)[:, None] * outsideVectors[negSampleWordIndices]).sum(axis=0)
+    )
+    gradOutsideVecs = np.zeros_like(outsideVectors)
+    gradOutsideVecs[outsideWordIdx] = (sigmoid(centerWordVec.dot(outsideVectors[outsideWordIdx])) - 1) * centerWordVec
+
+    for i, negWordIdx in enumerate(negSampleWordIndices):
+        gradOutsideVecs[negWordIdx] += sigmoid(centerWordVec.dot(outsideVectors[negWordIdx])) * centerWordVec
+
+    # Loss = -log(sigmoid(true dot))  + sum(log(sigmoid(neg sampled dots)))
 
     ### YOUR CODE HERE (~10 Lines)
 
